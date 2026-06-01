@@ -17,6 +17,7 @@ export function CharacterBrowser({ onSelect }: Props) {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
   const [activeLetter, setActiveLetter] = useState('')
+  const [pendingScrollLetter, setPendingScrollLetter] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
@@ -51,17 +52,28 @@ export function CharacterBrowser({ onSelect }: Props) {
 
   const availableLetters = new Set(Object.keys(groups))
 
-  function jumpToLetter(letter: string) {
+  async function jumpToLetter(letter: string) {
+    setActiveLetter(letter)
     const el = sectionRefs.current[letter]
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      setActiveLetter(letter)
-    } else {
-      // Letter not on this page — find closest page that has it
-      // For now just give visual feedback that it's not present
-      setActiveLetter(letter)
+      return
     }
+    // Letter not on current page — find and jump to the correct page
+    const targetPage = await idb.getPageForLetter(letter, PAGE_SIZE)
+    setPage(targetPage)
+    setPendingScrollLetter(letter)
   }
+
+  // After page change from letter jump, scroll to the section
+  useEffect(() => {
+    if (!pendingScrollLetter || loading) return
+    const el = sectionRefs.current[pendingScrollLetter]
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      setPendingScrollLetter(null)
+    }
+  }, [chars, pendingScrollLetter, loading])
 
   // Track which section is in view
   useEffect(() => {

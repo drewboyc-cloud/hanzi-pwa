@@ -115,6 +115,28 @@ export const idb = {
     })
   },
 
+  async getPageForLetter(letter: string, limit: number): Promise<number> {
+    const store = await tx(STORE_CHARS)
+    return new Promise((resolve, reject) => {
+      const req = store.getAll()
+      req.onsuccess = () => {
+        const all: Character[] = req.result
+        all.sort((a, b) => {
+          const pa = normalizePinyin(a.pinyin?.toLowerCase() ?? a.char)
+          const pb = normalizePinyin(b.pinyin?.toLowerCase() ?? b.char)
+          return pa.localeCompare(pb)
+        })
+        const target = letter === '#' ? '#' : letter.toLowerCase()
+        const idx = all.findIndex(c => {
+          const first = normalizePinyin(c.pinyin?.toLowerCase() ?? c.char)[0] ?? '#'
+          return letter === '#' ? !/[a-z]/.test(first) : first === target
+        })
+        resolve(idx < 0 ? 1 : Math.floor(idx / limit) + 1)
+      }
+      req.onerror = () => reject(req.error)
+    })
+  },
+
   async count(): Promise<number> {
     const store = await tx(STORE_CHARS)
     return new Promise((resolve, reject) => {
