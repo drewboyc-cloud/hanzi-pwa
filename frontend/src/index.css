@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  html, body, #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    background-color: #1a1a2e;
+    color: #f5f0e8;
+    font-family: 'Noto Sans SC', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-cinnabar text-white px-4 py-2 rounded-xl font-medium active:scale-95 transition-transform;
+  }
+
+  .btn-ghost {
+    @apply text-paper/70 px-3 py-2 rounded-xl active:scale-95 transition-transform hover:text-paper;
+  }
+
+  .card {
+    @apply bg-white/10 rounded-2xl p-4 backdrop-blur-sm;
+  }
+}
+
+/* Canvas drawing cursor */
+canvas {
+  cursor: crosshair;
+  touch-action: none;
+}
+
+/* iOS safe area padding */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}

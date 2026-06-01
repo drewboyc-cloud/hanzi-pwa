@@ -1,0 +1,92 @@
+import { useState } from 'react'
+import { useCharacterDB } from './hooks/useIndexedDB'
+import { CharacterBrowser } from './components/CharacterBrowser'
+import { CharacterDetail } from './components/CharacterDetail'
+import { SavedCharacters } from './components/SavedCharacters'
+import { ToneGuide } from './components/ToneGuide'
+import type { Character } from './services/api'
+
+type Tab = 'browse' | 'saved'
+
+export default function App() {
+  const { ready, syncing, total } = useCharacterDB()
+  const [tab, setTab] = useState<Tab>('browse')
+  const [selected, setSelected] = useState<Character | null>(null)
+  const [savedKey, setSavedKey] = useState(0)
+
+  if (!ready) {
+    return (
+      <div className="flex flex-col h-full">
+        <ToneGuide />
+        <div className="flex flex-col items-center justify-center flex-1 gap-4">
+        <span className="text-6xl font-hanzi">汉</span>
+        <p className="text-paper/60 text-lg">Hanzi Master</p>
+        {syncing && (
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
+              <div className="h-full w-1/3 bg-cinnabar rounded-full animate-pulse" />
+            </div>
+            <p className="text-paper/40 text-sm">Downloading character database…</p>
+          </div>
+        )}
+        </div>
+      </div>
+    )
+  }
+
+  if (selected) {
+    return (
+      <div className="flex flex-col h-full">
+        <ToneGuide />
+        <div className="flex-1 overflow-hidden">
+        <CharacterDetail
+          character={selected}
+          onBack={() => setSelected(null)}
+          onSaved={() => { setSavedKey(k => k + 1); setSelected(null) }}
+        />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      <ToneGuide />
+      {/* Header */}
+      <header className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+        <h1 className="text-xl font-bold tracking-tight">
+          <span className="text-cinnabar font-hanzi">汉</span> Hanzi Master
+        </h1>
+        <span className="text-paper/30 text-xs">{total.toLocaleString()} chars</span>
+      </header>
+
+      {/* Content */}
+      <main className="flex-1 overflow-hidden">
+        {tab === 'browse' ? (
+          <CharacterBrowser onSelect={setSelected} />
+        ) : (
+          <SavedCharacters key={savedKey} />
+        )}
+      </main>
+
+      {/* Bottom nav */}
+      <nav className="flex border-t border-white/10 safe-bottom">
+        {([
+          { id: 'browse', label: 'Browse', icon: '🔍' },
+          { id: 'saved', label: 'Saved', icon: '📚' },
+        ] as { id: Tab; label: string; icon: string }[]).map(item => (
+          <button
+            key={item.id}
+            onClick={() => setTab(item.id)}
+            className={`flex-1 flex flex-col items-center py-3 text-xs gap-1 transition-colors ${
+              tab === item.id ? 'text-cinnabar' : 'text-paper/40'
+            }`}
+          >
+            <span className="text-xl">{item.icon}</span>
+            {item.label}
+          </button>
+        ))}
+      </nav>
+    </div>
+  )
+}

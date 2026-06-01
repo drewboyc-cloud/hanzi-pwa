@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.env
+data/hanzi.db
+data/cedict_raw.txt
+data/unihan_data.txt
+venv/
+.venv/
