@@ -14,17 +14,18 @@ export function CharacterBrowser({ onSelect }: Props) {
   const [chars, setChars] = useState<Character[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
-  const [search, setSearch] = useState('')
+  const [pinyin, setPinyin] = useState('')
+  const [english, setEnglish] = useState('')
   const [loading, setLoading] = useState(false)
   const [activeLetter, setActiveLetter] = useState('')
   const [pendingScrollLetter, setPendingScrollLetter] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
-  const load = useCallback(async (q: string, p: number) => {
+  const load = useCallback(async (py: string, en: string, p: number) => {
     setLoading(true)
     try {
-      const { items, total } = await idb.getCharacters(q, p, PAGE_SIZE)
+      const { items, total } = await idb.getCharacters(py, en, p, PAGE_SIZE)
       setChars(items)
       setTotal(total)
     } finally {
@@ -34,12 +35,12 @@ export function CharacterBrowser({ onSelect }: Props) {
 
   useEffect(() => {
     setPage(1)
-    load(search, 1)
-  }, [search, load])
+    load(pinyin, english, 1)
+  }, [pinyin, english, load])
 
   useEffect(() => {
-    load(search, page)
-  }, [page, search, load])
+    load(pinyin, english, page)
+  }, [page, pinyin, english, load])
 
   const pages = Math.ceil(total / PAGE_SIZE)
 
@@ -50,6 +51,7 @@ export function CharacterBrowser({ onSelect }: Props) {
     ;(groups[key] ??= []).push(c)
   })
 
+  const isSearching = pinyin !== '' || english !== ''
   const availableLetters = new Set(Object.keys(groups))
 
   async function jumpToLetter(letter: string) {
@@ -96,7 +98,12 @@ export function CharacterBrowser({ onSelect }: Props) {
       {/* Main scroll area */}
       <div className="flex flex-col flex-1 min-w-0 h-full">
         <div className="px-4 py-3">
-          <SearchBar value={search} onChange={setSearch} />
+          <SearchBar
+            pinyin={pinyin}
+            english={english}
+            onPinyinChange={v => { setPinyin(v); setEnglish('') }}
+            onEnglishChange={v => { setEnglish(v); setPinyin('') }}
+          />
           <p className="text-paper/40 text-xs mt-1 ml-1">{total.toLocaleString()} characters</p>
         </div>
 
@@ -155,7 +162,7 @@ export function CharacterBrowser({ onSelect }: Props) {
       </div>
 
       {/* A–Z sidebar */}
-      {!search && (
+      {!isSearching && (
         <div className="flex flex-col justify-center py-2 px-1 gap-0.5 select-none">
           {LETTERS.map(letter => (
             <button

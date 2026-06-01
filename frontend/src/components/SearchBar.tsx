@@ -1,31 +1,39 @@
 interface Props {
-  value: string
-  onChange: (v: string) => void
+  pinyin: string
+  english: string
+  onPinyinChange: (v: string) => void
+  onEnglishChange: (v: string) => void
 }
 
-export function SearchBar({ value, onChange }: Props) {
+export function SearchBar({ pinyin, english, onPinyinChange, onEnglishChange }: Props) {
   return (
-    <div className="relative">
-      <input
-        type="search"
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder="Search pinyin or English…"
-        className="w-full bg-white/10 rounded-xl px-4 py-2.5 text-paper placeholder:text-paper/40 outline-none focus:ring-2 focus:ring-cinnabar"
-      />
-      {!value && (
-        <p className="mt-1.5 text-paper/35 text-xs px-1">
-          Search one syllable at a time — e.g. <span className="text-paper/55">lao</span> for 老, <span className="text-paper/55">shi</span> for 师, or <span className="text-paper/55">teacher</span> in English
-        </p>
-      )}
-      {value && (
-        <button
-          onClick={() => onChange('')}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-paper/50 text-xl leading-none"
-        >
-          ×
-        </button>
-      )}
+    <div className="flex flex-col gap-2">
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-paper/40 text-xs font-medium">拼</span>
+        <input
+          type="search"
+          value={pinyin}
+          onChange={e => onPinyinChange(e.target.value)}
+          placeholder="Pinyin — e.g. lao, ke, shi…"
+          className="w-full bg-white/10 rounded-xl pl-8 pr-8 py-2.5 text-paper placeholder:text-paper/30 outline-none focus:ring-2 focus:ring-cinnabar"
+        />
+        {pinyin && (
+          <button onClick={() => onPinyinChange('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-paper/50 text-xl leading-none">×</button>
+        )}
+      </div>
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-paper/40 text-xs font-medium">En</span>
+        <input
+          type="search"
+          value={english}
+          onChange={e => onEnglishChange(e.target.value)}
+          placeholder="English — e.g. teacher, love…"
+          className="w-full bg-white/10 rounded-xl pl-8 pr-8 py-2.5 text-paper placeholder:text-paper/30 outline-none focus:ring-2 focus:ring-gold"
+        />
+        {english && (
+          <button onClick={() => onEnglishChange('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-paper/50 text-xl leading-none">×</button>
+        )}
+      </div>
     </div>
   )
 }

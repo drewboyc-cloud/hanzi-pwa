@@ -53,27 +53,23 @@ export const idb = {
     })
   },
 
-  async getCharacters(search = '', page = 1, limit = 50): Promise<{ items: Character[]; total: number }> {
+  async getCharacters(pinyin = '', english = '', page = 1, limit = 50): Promise<{ items: Character[]; total: number }> {
     const store = await tx(STORE_CHARS)
     return new Promise((resolve, reject) => {
       const req = store.getAll()
       req.onsuccess = () => {
         let all: Character[] = req.result
-        if (search) {
-          const s = normalizePinyin(search.toLowerCase().trim())
-          // Split multi-syllable query (e.g. "lao shi") into individual syllables
-          const syllables = s.split(/\s+/).filter(Boolean)
+        if (pinyin) {
+          const syllables = normalizePinyin(pinyin.toLowerCase().trim()).split(/\s+/).filter(Boolean)
           all = all.filter(c => {
-            const py = normalizePinyin(c.pinyin?.toLowerCase() ?? '')
-            const en = c.english?.toLowerCase() ?? ''
-            // Exact character match
-            if (c.char === search) return true
-            // English match
-            if (en.includes(s)) return true
-            // Pinyin: every syllable the user typed must appear in the character's pinyin
-            if (syllables.every(syl => py.includes(syl))) return true
-            return false
+            if (c.char === pinyin) return true
+            const pySyllables = normalizePinyin(c.pinyin?.toLowerCase() ?? '').split(/\s+/)
+            return syllables.every(syl => pySyllables.some(stored => stored.startsWith(syl)))
           })
+        }
+        if (english) {
+          const en = english.toLowerCase().trim()
+          all = all.filter(c => c.english?.toLowerCase().includes(en))
         }
         all.sort((a, b) => {
           const pa = normalizePinyin(a.pinyin?.toLowerCase() ?? a.char)
