@@ -24,9 +24,18 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB per file
+        // Only precache app shell — NOT the 9,575 stroke JSON files (too large for manifest)
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         runtimeCaching: [
+          // Stroke data: cache each file on first access, keep forever offline
+          {
+            urlPattern: /\/hanzi-data\/.+\.json$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'stroke-data',
+              expiration: { maxEntries: 10000, maxAgeSeconds: 60 * 60 * 24 * 365 },
+            },
+          },
           {
             urlPattern: /\/api\/characters\/all$/,
             handler: 'CacheFirst',
