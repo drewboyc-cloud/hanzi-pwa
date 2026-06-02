@@ -34,12 +34,12 @@ export function WordResults({ words, favIds, onToggleFav, onSelectWord, loading,
             onClick={() => onSelectWord(word)}
             className="flex items-center gap-3 flex-1 min-w-0 text-left active:opacity-70"
           >
-            <span className="text-3xl font-hanzi leading-none shrink-0 w-14 text-center">
+            <span className="text-4xl font-hanzi leading-none shrink-0 w-14 text-center">
               {word.simplified}
             </span>
             <div className="flex-1 min-w-0">
               <PinyinDisplay raw={word.pinyin} size="sm" showNumber={true} />
-              <p className="text-paper/60 text-xs mt-0.5 leading-snug line-clamp-2">
+              <p className="text-paper/60 text-[15px] mt-0.5 leading-snug line-clamp-2">
                 {word.english}
               </p>
             </div>

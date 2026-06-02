@@ -14,8 +14,8 @@ export function PinyinDisplay({ raw, size = 'md', showNumber = true }: Props) {
   const syllables = parsePinyin(raw)
   if (!syllables.length) return null
 
-  const textSize = size === 'sm' ? 'text-[11px]' : size === 'lg' ? 'text-3xl' : 'text-lg'
-  const supSize = size === 'sm' ? 'text-[8px]' : size === 'lg' ? 'text-sm' : 'text-[10px]'
+  const textSize = size === 'sm' ? 'text-[14px]' : size === 'lg' ? 'text-3xl' : 'text-lg'
+  const supSize = size === 'sm' ? 'text-[10px]' : size === 'lg' ? 'text-sm' : 'text-[10px]'
 
   return (
     <span className="inline-flex items-baseline gap-1 flex-wrap">
