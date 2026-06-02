@@ -12,7 +12,7 @@ export default function App() {
   const { ready, syncing, total } = useCharacterDB()
   const [tab, setTab] = useState<Tab>('browse')
   const [selected, setSelected] = useState<Character | null>(null)
-  const [savedKey, setSavedKey] = useState(0)
+  const [savedKey] = useState(0)
 
   if (!ready) {
     return (
@@ -42,7 +42,6 @@ export default function App() {
         <CharacterDetail
           character={selected}
           onBack={() => setSelected(null)}
-          onSaved={() => { setSavedKey(k => k + 1); setSelected(null) }}
         />
         </div>
       </div>
