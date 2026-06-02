@@ -5,7 +5,7 @@ import { STORE_FAVS } from '../services/database'
 // Re-use the same DB instance via a simple helper
 function openFavDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open('hanzi-pwa', 2)
+    const req = indexedDB.open('hanzi-pwa', 3)
     req.onupgradeneeded = (e) => {
       const db = (e.target as IDBOpenDBRequest).result
       if (!db.objectStoreNames.contains('characters')) {
@@ -17,6 +17,10 @@ function openFavDB(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(STORE_FAVS)) {
         db.createObjectStore(STORE_FAVS, { keyPath: 'id' })
+      }
+      if (!db.objectStoreNames.contains('words')) {
+        const ws = db.createObjectStore('words', { keyPath: 'id' })
+        ws.createIndex('simplified', 'simplified', { unique: false })
       }
     }
     req.onsuccess = () => resolve(req.result)

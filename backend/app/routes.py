@@ -60,6 +60,13 @@ def get_character(char_id):
     return jsonify(char.to_dict(include_strokes=True))
 
 
+@api.route('/words/all')
+def get_all_words():
+    """Bulk endpoint for IndexedDB cache download."""
+    words = Word.query.order_by(Word.char_count, Word.pinyin).all()
+    return jsonify([w.to_dict() for w in words])
+
+
 @api.route('/words')
 def search_words():
     english = request.args.get('english', '').strip()

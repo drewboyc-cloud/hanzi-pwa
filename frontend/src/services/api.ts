@@ -72,6 +72,7 @@ export const api = {
   },
 
   getAllCharacters: () => get<Character[]>('/characters/all'),
+  getAllWords: () => get<Word[]>('/words/all'),
 
   getCharacter: (id: string) => get<Character>(`/character/${encodeURIComponent(id)}`),
 

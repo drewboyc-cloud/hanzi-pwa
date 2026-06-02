@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { idb } from '../services/database'
-import { api } from '../services/api'
 import type { Character, Word } from '../services/api'
 import { SearchBar } from './SearchBar'
 import { PinyinDisplay } from './PinyinDisplay'
@@ -53,20 +52,15 @@ export function CharacterBrowser({ onSelect, onSelectWord, favIds, onToggleFav }
     }
   }, [])
 
-  // Load word results from API
+  // Load word results — from IndexedDB (works offline)
   const loadWords = useCallback(async (py: string, en: string) => {
-    // Show words when English has text OR pinyin has tone numbers
     if (!en && !hasToneNumbers(py)) {
       setWords([])
       return
     }
     setWordsLoading(true)
     try {
-      const results = await api.searchWords({
-        english: en || undefined,
-        pinyin: py || undefined,
-        limit: 30,
-      })
+      const results = await idb.searchWords(en, py, 30)
       setWords(results)
     } catch {
       setWords([])

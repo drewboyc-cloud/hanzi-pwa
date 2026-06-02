@@ -11,7 +11,7 @@ import type { Character, Word } from './services/api'
 type Tab = 'browse' | 'favourites'
 
 export default function App() {
-  const { ready, syncing, total } = useCharacterDB()
+  const { ready, syncing, syncLabel, total } = useCharacterDB()
   const { favourites, favIds, toggle } = useFavourites()
   const [tab, setTab] = useState<Tab>('browse')
   const [selectedChar, setSelectedChar] = useState<Character | null>(null)
@@ -29,7 +29,7 @@ export default function App() {
               <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
                 <div className="h-full w-1/3 bg-cinnabar rounded-full animate-pulse" />
               </div>
-              <p className="text-paper/40 text-sm">Downloading character database…</p>
+              <p className="text-paper/40 text-sm">{syncLabel || 'Downloading…'}</p>
             </div>
           )}
         </div>

@@ -1,9 +1,10 @@
-import type { Character } from './api'
+import type { Character, Word } from './api'
 
 const DB_NAME = 'hanzi-pwa'
-const DB_VERSION = 2          // bumped to add favourites store
+const DB_VERSION = 3          // v3: add words store
 const STORE_CHARS = 'characters'
 const STORE_META = 'meta'
+const STORE_WORDS = 'words'
 export const STORE_FAVS = 'favourites'
 
 let _db: IDBDatabase | null = null
@@ -13,7 +14,7 @@ function normalizePinyin(s: string): string {
   return s
     .replace(/[āáǎà]/g, 'a').replace(/[ēéěè]/g, 'e').replace(/[īíǐì]/g, 'i')
     .replace(/[ōóǒò]/g, 'o').replace(/[ūúǔù]/g, 'u').replace(/[ǖǘǚǜ]/g, 'u')
-    .replace(/[1-5]/g, '')  // strip tone numbers
+    .replace(/[1-5]/g, '')
     .trim()
 }
 
@@ -35,6 +36,10 @@ function openDB(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(STORE_FAVS)) {
         db.createObjectStore(STORE_FAVS, { keyPath: 'id' })
       }
+      if (!db.objectStoreNames.contains(STORE_WORDS)) {
+        const ws = db.createObjectStore(STORE_WORDS, { keyPath: 'id' })
+        ws.createIndex('simplified', 'simplified', { unique: false })
+      }
     }
     req.onsuccess = () => { _db = req.result; resolve(_db) }
     req.onerror = () => reject(req.error)
@@ -54,6 +59,57 @@ export const idb = {
       chars.forEach(c => store.put(c))
       t.oncomplete = () => resolve()
       t.onerror = () => reject(t.error)
+    })
+  },
+
+  async bulkPutWords(words: Word[]): Promise<void> {
+    const db = await openDB()
+    return new Promise((resolve, reject) => {
+      const t = db.transaction(STORE_WORDS, 'readwrite')
+      const store = t.objectStore(STORE_WORDS)
+      words.forEach(w => store.put(w))
+      t.oncomplete = () => resolve()
+      t.onerror = () => reject(t.error)
+    })
+  },
+
+  async searchWords(english: string, pinyin: string, limit = 30): Promise<Word[]> {
+    const store = await tx(STORE_WORDS)
+    return new Promise((resolve, reject) => {
+      const req = store.getAll()
+      req.onsuccess = () => {
+        let all: Word[] = req.result
+        if (english) {
+          const en = english.toLowerCase().trim()
+          all = all.filter(w => w.english?.toLowerCase().includes(en))
+        }
+        if (pinyin) {
+          const norm = normalizePinyin(pinyin.toLowerCase().trim())
+          const syllables = norm.split(/\s+/).filter(Boolean)
+          const hasTone = /[1-5]/.test(pinyin)
+          all = all.filter(w => {
+            const wNorm = normalizePinyin(w.pinyin?.toLowerCase() ?? '')
+            if (hasTone) {
+              // Tone number search: match full pinyin with tones
+              return w.pinyin?.toLowerCase().includes(pinyin.toLowerCase()) ?? false
+            }
+            return syllables.every(syl => wNorm.includes(syl))
+          })
+        }
+        // Sort: shorter words first (more common)
+        all.sort((a, b) => (a.charCount ?? 9) - (b.charCount ?? 9))
+        resolve(all.slice(0, limit))
+      }
+      req.onerror = () => reject(req.error)
+    })
+  },
+
+  async wordCount(): Promise<number> {
+    const store = await tx(STORE_WORDS)
+    return new Promise((resolve, reject) => {
+      const req = store.count()
+      req.onsuccess = () => resolve(req.result)
+      req.onerror = () => reject(req.error)
     })
   },
 
