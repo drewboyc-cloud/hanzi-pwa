@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from . import db
-from .models import Character, SavedDrawing, Word
+from .models import Character, SavedDrawing, Word, Favourite
+import json
 from sqlalchemy import or_
 import re
 
@@ -95,6 +96,34 @@ def search_words():
     # Sort: shorter words first (more common), then alphabetically
     results = query.order_by(Word.char_count, Word.pinyin).limit(limit).all()
     return jsonify([w.to_dict() for w in results])
+
+
+@api.route('/favourites')
+def get_favourites():
+    favs = Favourite.query.order_by(Favourite.created_at).all()
+    return jsonify([f.to_dict() for f in favs])
+
+
+@api.route('/favourites/<int:word_id>', methods=['POST'])
+def add_favourite(word_id):
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Missing data'}), 400
+    existing = Favourite.query.get(word_id)
+    if not existing:
+        fav = Favourite(id=word_id, word_data=json.dumps(data))
+        db.session.add(fav)
+        db.session.commit()
+    return jsonify({'saved': word_id}), 201
+
+
+@api.route('/favourites/<int:word_id>', methods=['DELETE'])
+def remove_favourite(word_id):
+    fav = Favourite.query.get(word_id)
+    if fav:
+        db.session.delete(fav)
+        db.session.commit()
+    return jsonify({'deleted': word_id})
 
 
 @api.route('/save-drawing', methods=['POST'])

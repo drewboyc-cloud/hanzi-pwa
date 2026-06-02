@@ -31,6 +31,18 @@ class Character(db.Model):
         return d
 
 
+class Favourite(db.Model):
+    __tablename__ = 'favourites'
+
+    id = db.Column(db.Integer, primary_key=True)   # same as Word.id
+    word_data = db.Column(db.Text, nullable=False)  # full Word JSON
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        import json
+        return json.loads(self.word_data)
+
+
 class Word(db.Model):
     __tablename__ = 'words'
 

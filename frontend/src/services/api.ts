@@ -83,6 +83,10 @@ export const api = {
 
   deleteDrawing: (id: number) => del(`/saved-drawings/${id}`),
 
+  getFavourites: () => get<Word[]>('/favourites'),
+  addFavourite: (word: Word) => post<{ saved: number }>(`/favourites/${word.id}`, word),
+  removeFavourite: (id: number) => del(`/favourites/${id}`),
+
   searchWords: (params: { english?: string; pinyin?: string; limit?: number }) => {
     const q = new URLSearchParams()
     if (params.english) q.set('english', params.english)
