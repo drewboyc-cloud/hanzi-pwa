@@ -12,6 +12,15 @@ export interface Character {
   strokeOrderJson?: string
 }
 
+export interface Word {
+  id: number
+  simplified: string
+  traditional: string | null
+  pinyin: string | null
+  english: string | null
+  charCount: number
+}
+
 export interface SavedDrawing {
   id: number
   characterId: string
@@ -72,4 +81,12 @@ export const api = {
   getSavedDrawings: () => get<SavedDrawing[]>('/saved-drawings'),
 
   deleteDrawing: (id: number) => del(`/saved-drawings/${id}`),
+
+  searchWords: (params: { english?: string; pinyin?: string; limit?: number }) => {
+    const q = new URLSearchParams()
+    if (params.english) q.set('english', params.english)
+    if (params.pinyin) q.set('pinyin', params.pinyin)
+    if (params.limit) q.set('limit', String(params.limit))
+    return get<Word[]>(`/words?${q}`)
+  },
 }

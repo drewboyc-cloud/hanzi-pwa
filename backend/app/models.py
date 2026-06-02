@@ -31,6 +31,28 @@ class Character(db.Model):
         return d
 
 
+class Word(db.Model):
+    __tablename__ = 'words'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    simplified = db.Column(db.String(50), nullable=False, index=True)
+    traditional = db.Column(db.String(50))
+    pinyin = db.Column(db.String(200))
+    english = db.Column(db.Text)
+    char_count = db.Column(db.Integer)
+    pinyin_normalized = db.Column(db.String(200), index=True)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'simplified': self.simplified,
+            'traditional': self.traditional,
+            'pinyin': self.pinyin,
+            'english': self.english,
+            'charCount': self.char_count,
+        }
+
+
 class SavedDrawing(db.Model):
     __tablename__ = 'saved_drawings'
 

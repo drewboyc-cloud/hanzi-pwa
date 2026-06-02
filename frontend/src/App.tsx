@@ -1,34 +1,36 @@
 import { useState } from 'react'
 import { useCharacterDB } from './hooks/useIndexedDB'
+import { useFavourites } from './hooks/useFavourites'
 import { CharacterBrowser } from './components/CharacterBrowser'
 import { CharacterDetail } from './components/CharacterDetail'
 import { SavedCharacters } from './components/SavedCharacters'
+import { FavouritesScreen } from './components/FavouritesScreen'
 import { ToneGuide } from './components/ToneGuide'
 import type { Character } from './services/api'
 
-type Tab = 'browse' | 'saved'
+type Tab = 'browse' | 'favourites' | 'saved'
 
 export default function App() {
   const { ready, syncing, total } = useCharacterDB()
+  const { favourites, favIds, toggle } = useFavourites()
   const [tab, setTab] = useState<Tab>('browse')
   const [selected, setSelected] = useState<Character | null>(null)
-  const [savedKey] = useState(0)
 
   if (!ready) {
     return (
       <div className="flex flex-col h-full">
         <ToneGuide />
         <div className="flex flex-col items-center justify-center flex-1 gap-4">
-        <span className="text-6xl font-hanzi">汉</span>
-        <p className="text-paper/60 text-lg">Hanzi Master</p>
-        {syncing && (
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
-              <div className="h-full w-1/3 bg-cinnabar rounded-full animate-pulse" />
+          <span className="text-6xl font-hanzi">汉</span>
+          <p className="text-paper/60 text-lg">Hanzi Master</p>
+          {syncing && (
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full w-1/3 bg-cinnabar rounded-full animate-pulse" />
+              </div>
+              <p className="text-paper/40 text-sm">Downloading character database…</p>
             </div>
-            <p className="text-paper/40 text-sm">Downloading character database…</p>
-          </div>
-        )}
+          )}
         </div>
       </div>
     )
@@ -39,10 +41,10 @@ export default function App() {
       <div className="flex flex-col h-full">
         <ToneGuide />
         <div className="flex-1 overflow-hidden">
-        <CharacterDetail
-          character={selected}
-          onBack={() => setSelected(null)}
-        />
+          <CharacterDetail
+            character={selected}
+            onBack={() => setSelected(null)}
+          />
         </div>
       </div>
     )
@@ -51,6 +53,7 @@ export default function App() {
   return (
     <div className="flex flex-col h-full">
       <ToneGuide />
+
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-white/10">
         <h1 className="text-xl font-bold tracking-tight">
@@ -61,17 +64,27 @@ export default function App() {
 
       {/* Content */}
       <main className="flex-1 overflow-hidden">
-        {tab === 'browse' ? (
-          <CharacterBrowser onSelect={setSelected} />
-        ) : (
-          <SavedCharacters key={savedKey} />
+        {tab === 'browse' && (
+          <CharacterBrowser
+            onSelect={setSelected}
+            favIds={favIds}
+            onToggleFav={toggle}
+          />
         )}
+        {tab === 'favourites' && (
+          <FavouritesScreen
+            favourites={favourites}
+            onToggleFav={toggle}
+          />
+        )}
+        {tab === 'saved' && <SavedCharacters />}
       </main>
 
       {/* Bottom nav */}
       <nav className="flex border-t border-white/10 safe-bottom">
         {([
           { id: 'browse', label: 'Browse', icon: '🔍' },
+          { id: 'favourites', label: 'Favourites', icon: '★' },
           { id: 'saved', label: 'Saved', icon: '📚' },
         ] as { id: Tab; label: string; icon: string }[]).map(item => (
           <button
@@ -81,7 +94,7 @@ export default function App() {
               tab === item.id ? 'text-cinnabar' : 'text-paper/40'
             }`}
           >
-            <span className="text-xl">{item.icon}</span>
+            <span className={`${item.id === 'favourites' ? 'text-2xl' : 'text-xl'}`}>{item.icon}</span>
             {item.label}
           </button>
         ))}

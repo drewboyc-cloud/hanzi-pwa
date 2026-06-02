@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
 from . import db
-from .models import Character, SavedDrawing
+from .models import Character, SavedDrawing, Word
 from sqlalchemy import or_
+import re
 
 api = Blueprint('api', __name__)
 
@@ -57,6 +58,36 @@ def get_all_characters():
 def get_character(char_id):
     char = Character.query.get_or_404(char_id)
     return jsonify(char.to_dict(include_strokes=True))
+
+
+@api.route('/words')
+def search_words():
+    english = request.args.get('english', '').strip()
+    pinyin = request.args.get('pinyin', '').strip()
+    limit = min(request.args.get('limit', 30, type=int), 100)
+
+    if not english and not pinyin:
+        return jsonify([])
+
+    query = Word.query
+
+    if english:
+        query = query.filter(Word.english.ilike(f'%{english}%'))
+
+    if pinyin:
+        # Normalize: strip tone numbers for broad match, keep them for exact
+        norm = re.sub(r'[1-5]', '', pinyin).lower().replace(' ', '')
+        # Also try matching with tone numbers intact
+        query = query.filter(
+            or_(
+                Word.pinyin_normalized.ilike(f'%{norm}%'),
+                Word.pinyin.ilike(f'%{pinyin}%'),
+            )
+        )
+
+    # Sort: shorter words first (more common), then alphabetically
+    results = query.order_by(Word.char_count, Word.pinyin).limit(limit).all()
+    return jsonify([w.to_dict() for w in results])
 
 
 @api.route('/save-drawing', methods=['POST'])
