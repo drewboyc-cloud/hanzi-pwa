@@ -8,7 +8,7 @@ const TONES = [
 
 export function ToneGuide() {
   return (
-    <div className="flex items-center justify-center gap-1 px-3 py-1.5 bg-white/5 border-b border-white/10 overflow-x-auto">
+    <div className="flex items-center justify-center gap-1 px-3 pb-1.5 bg-white/5 border-b border-white/10 overflow-x-auto" style={{ paddingTop: 'max(env(safe-area-inset-top), 6px)' }}>
       {TONES.map((t, i) => (
         <div key={t.num} className="flex items-center gap-1">
           <div className="flex items-center gap-1 whitespace-nowrap">
