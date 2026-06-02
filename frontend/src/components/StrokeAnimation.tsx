@@ -29,7 +29,7 @@ export function StrokeAnimation({ char }: Props) {
       delayBetweenStrokes: 300,
       // Load stroke data from our bundled local files
       charDataLoader: (char, onLoad, onError) => {
-        fetch(`/hanzi-pwa/hanzi-data/${encodeURIComponent(char)}.json`)
+        fetch(`/hanzi-pwa/hanzi-data/${char}.json`)
           .then(r => {
             if (!r.ok) throw new Error('not found')
             return r.json()

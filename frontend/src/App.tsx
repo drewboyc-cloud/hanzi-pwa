@@ -3,12 +3,11 @@ import { useCharacterDB } from './hooks/useIndexedDB'
 import { useFavourites } from './hooks/useFavourites'
 import { CharacterBrowser } from './components/CharacterBrowser'
 import { CharacterDetail } from './components/CharacterDetail'
-import { SavedCharacters } from './components/SavedCharacters'
 import { FavouritesScreen } from './components/FavouritesScreen'
 import { ToneGuide } from './components/ToneGuide'
 import type { Character } from './services/api'
 
-type Tab = 'browse' | 'favourites' | 'saved'
+type Tab = 'browse' | 'favourites'
 
 export default function App() {
   const { ready, syncing, total } = useCharacterDB()
@@ -77,7 +76,6 @@ export default function App() {
             onToggleFav={toggle}
           />
         )}
-        {tab === 'saved' && <SavedCharacters />}
       </main>
 
       {/* Bottom nav */}
@@ -85,7 +83,6 @@ export default function App() {
         {([
           { id: 'browse', label: 'Browse', icon: '🔍' },
           { id: 'favourites', label: 'Favourites', icon: '★' },
-          { id: 'saved', label: 'Saved', icon: '📚' },
         ] as { id: Tab; label: string; icon: string }[]).map(item => (
           <button
             key={item.id}

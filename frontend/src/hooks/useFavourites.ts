@@ -1,16 +1,22 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { Word } from '../services/api'
+import { STORE_FAVS } from '../services/database'
 
-const DB_NAME = 'hanzi-pwa'
-const STORE = 'favourites'
-
+// Re-use the same DB instance via a simple helper
 function openFavDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 2) // bump version to add store
+    const req = indexedDB.open('hanzi-pwa', 2)
     req.onupgradeneeded = (e) => {
       const db = (e.target as IDBOpenDBRequest).result
-      if (!db.objectStoreNames.contains(STORE)) {
-        db.createObjectStore(STORE, { keyPath: 'id' })
+      if (!db.objectStoreNames.contains('characters')) {
+        const s = db.createObjectStore('characters', { keyPath: 'id' })
+        s.createIndex('char', 'char', { unique: false })
+      }
+      if (!db.objectStoreNames.contains('meta')) {
+        db.createObjectStore('meta')
+      }
+      if (!db.objectStoreNames.contains(STORE_FAVS)) {
+        db.createObjectStore(STORE_FAVS, { keyPath: 'id' })
       }
     }
     req.onsuccess = () => resolve(req.result)
@@ -22,14 +28,12 @@ export function useFavourites() {
   const [favourites, setFavourites] = useState<Word[]>([])
   const [favIds, setFavIds] = useState<Set<number>>(new Set())
 
-  useEffect(() => {
-    loadAll()
-  }, [])
+  useEffect(() => { loadAll() }, [])
 
   async function loadAll() {
     const db = await openFavDB()
-    const t = db.transaction(STORE, 'readonly')
-    const store = t.objectStore(STORE)
+    const t = db.transaction(STORE_FAVS, 'readonly')
+    const store = t.objectStore(STORE_FAVS)
     const req = store.getAll()
     req.onsuccess = () => {
       const items: Word[] = req.result
@@ -40,22 +44,28 @@ export function useFavourites() {
 
   const add = useCallback(async (word: Word) => {
     const db = await openFavDB()
-    const t = db.transaction(STORE, 'readwrite')
-    t.objectStore(STORE).put(word)
-    t.oncomplete = () => {
-      setFavourites(prev => [word, ...prev.filter(w => w.id !== word.id)])
-      setFavIds(prev => new Set([...prev, word.id]))
-    }
+    return new Promise<void>((resolve) => {
+      const t = db.transaction(STORE_FAVS, 'readwrite')
+      t.objectStore(STORE_FAVS).put(word)
+      t.oncomplete = () => {
+        setFavourites(prev => [word, ...prev.filter(w => w.id !== word.id)])
+        setFavIds(prev => new Set([...prev, word.id]))
+        resolve()
+      }
+    })
   }, [])
 
   const remove = useCallback(async (id: number) => {
     const db = await openFavDB()
-    const t = db.transaction(STORE, 'readwrite')
-    t.objectStore(STORE).delete(id)
-    t.oncomplete = () => {
-      setFavourites(prev => prev.filter(w => w.id !== id))
-      setFavIds(prev => { const s = new Set(prev); s.delete(id); return s })
-    }
+    return new Promise<void>((resolve) => {
+      const t = db.transaction(STORE_FAVS, 'readwrite')
+      t.objectStore(STORE_FAVS).delete(id)
+      t.oncomplete = () => {
+        setFavourites(prev => prev.filter(w => w.id !== id))
+        setFavIds(prev => { const s = new Set(prev); s.delete(id); return s })
+        resolve()
+      }
+    })
   }, [])
 
   const toggle = useCallback(async (word: Word) => {

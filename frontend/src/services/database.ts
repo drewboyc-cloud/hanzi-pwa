@@ -1,9 +1,10 @@
 import type { Character } from './api'
 
 const DB_NAME = 'hanzi-pwa'
-const DB_VERSION = 1
+const DB_VERSION = 2          // bumped to add favourites store
 const STORE_CHARS = 'characters'
 const STORE_META = 'meta'
+export const STORE_FAVS = 'favourites'
 
 let _db: IDBDatabase | null = null
 
@@ -30,6 +31,9 @@ function openDB(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(STORE_META)) {
         db.createObjectStore(STORE_META)
+      }
+      if (!db.objectStoreNames.contains(STORE_FAVS)) {
+        db.createObjectStore(STORE_FAVS, { keyPath: 'id' })
       }
     }
     req.onsuccess = () => { _db = req.result; resolve(_db) }
