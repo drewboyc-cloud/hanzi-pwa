@@ -60,7 +60,7 @@ export function CharacterBrowser({ onSelect, onSelectWord, favIds, onToggleFav }
     }
     setWordsLoading(true)
     try {
-      const results = await idb.searchWords(en, py, 30)
+      const results = await idb.searchWords(en, py, 60)
       setWords(results)
     } catch {
       setWords([])

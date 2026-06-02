@@ -73,16 +73,28 @@ export const idb = {
     })
   },
 
-  async searchWords(english: string, pinyin: string, limit = 30): Promise<Word[]> {
+  async searchWords(english: string, pinyin: string, limit = 60): Promise<Word[]> {
     const store = await tx(STORE_WORDS)
     return new Promise((resolve, reject) => {
       const req = store.getAll()
       req.onsuccess = () => {
         let all: Word[] = req.result
+
         if (english) {
           const en = english.toLowerCase().trim()
           all = all.filter(w => w.english?.toLowerCase().includes(en))
+
+          // Relevance sort: exact/starts-with first, then shorter words
+          all.sort((a, b) => {
+            const ae = a.english?.toLowerCase() ?? ''
+            const be = b.english?.toLowerCase() ?? ''
+            const aExact = ae === en || ae.startsWith(en + ';') || ae.startsWith(en + ' ') ? 0 : 1
+            const bExact = be === en || be.startsWith(en + ';') || be.startsWith(en + ' ') ? 0 : 1
+            if (aExact !== bExact) return aExact - bExact
+            return (a.charCount ?? 9) - (b.charCount ?? 9)
+          })
         }
+
         if (pinyin) {
           const norm = normalizePinyin(pinyin.toLowerCase().trim())
           const syllables = norm.split(/\s+/).filter(Boolean)
@@ -90,14 +102,13 @@ export const idb = {
           all = all.filter(w => {
             const wNorm = normalizePinyin(w.pinyin?.toLowerCase() ?? '')
             if (hasTone) {
-              // Tone number search: match full pinyin with tones
               return w.pinyin?.toLowerCase().includes(pinyin.toLowerCase()) ?? false
             }
             return syllables.every(syl => wNorm.includes(syl))
           })
+          all.sort((a, b) => (a.charCount ?? 9) - (b.charCount ?? 9))
         }
-        // Sort: shorter words first (more common)
-        all.sort((a, b) => (a.charCount ?? 9) - (b.charCount ?? 9))
+
         resolve(all.slice(0, limit))
       }
       req.onerror = () => reject(req.error)
