@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { idb } from '../services/database'
 import type { Character } from '../services/api'
 import { SearchBar } from './SearchBar'
+import { PinyinDisplay } from './PinyinDisplay'
 
 interface Props {
   onSelect: (char: Character) => void
@@ -131,7 +132,7 @@ export function CharacterBrowser({ onSelect }: Props) {
                       className="card flex flex-col items-center py-3 active:scale-95 transition-transform hover:bg-white/20"
                     >
                       <span className="text-3xl font-hanzi leading-none">{c.char}</span>
-                      <span className="text-paper/50 text-[10px] mt-1 truncate w-full text-center">{c.pinyin?.split(' ')[0]}</span>
+                      <span className="mt-1 text-center"><PinyinDisplay raw={c.pinyin?.split(' ')[0]} size="sm" /></span>
                     </button>
                   ))}
                 </div>

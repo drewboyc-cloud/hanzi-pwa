@@ -3,6 +3,7 @@ import { idb } from '../services/database'
 import { api } from '../services/api'
 import type { Character } from '../services/api'
 import { DrawingCanvas } from './DrawingCanvas'
+import { PinyinDisplay } from './PinyinDisplay'
 
 interface Props {
   character: Character
@@ -15,20 +16,13 @@ export function CharacterDetail({ character, onBack, onSaved }: Props) {
   const [tab, setTab] = useState<'info' | 'practice'>('info')
 
   useEffect(() => {
-    // Load full character data with stroke JSON
     async function load() {
-      // Try IndexedDB first, then API
       const cached = await idb.getCharacterById(character.id)
-      if (cached?.strokeOrderJson) {
-        setFull(cached)
-        return
-      }
+      if (cached?.strokeOrderJson) { setFull(cached); return }
       try {
         const data = await api.getCharacter(character.id)
         setFull(data)
-      } catch {
-        // Keep base character data
-      }
+      } catch { /* keep base data */ }
     }
     load()
   }, [character.id, character])
@@ -53,16 +47,27 @@ export function CharacterDetail({ character, onBack, onSaved }: Props) {
         )}
       </div>
 
-      {/* Character hero */}
-      <div className="flex items-center gap-6 px-6 py-5">
-        <span className="text-8xl font-hanzi leading-none">{full.char}</span>
-        <div>
+      {/* Character hero — larger on detail screen */}
+      <div className="flex items-center gap-6 px-6 py-6">
+        {/* Big character */}
+        <span className="text-[120px] font-hanzi leading-none shrink-0">{full.char}</span>
+
+        <div className="flex flex-col gap-2">
+          {/* Traditional form */}
           {full.traditional && full.traditional !== full.char && (
-            <div className="text-paper/50 text-sm mb-1">Traditional: <span className="text-paper font-hanzi text-xl">{full.traditional}</span></div>
+            <div className="text-paper/50 text-sm">
+              Traditional: <span className="text-paper font-hanzi text-2xl ml-1">{full.traditional}</span>
+            </div>
           )}
-          <div className="text-2xl text-gold font-light">{full.pinyin}</div>
-          <div className="text-paper/70 mt-1 text-sm leading-snug max-w-xs">{full.english}</div>
-          <div className="flex gap-4 mt-2 text-paper/40 text-xs">
+
+          {/* Pinyin — large with diacritics + tone number */}
+          <PinyinDisplay raw={full.pinyin} size="lg" showNumber={true} />
+
+          {/* English — larger and more readable */}
+          <div className="text-paper/80 text-base leading-snug max-w-xs">{full.english}</div>
+
+          {/* Meta */}
+          <div className="flex gap-4 text-paper/40 text-sm mt-1">
             {full.strokeCount && <span>{full.strokeCount} strokes</span>}
             {full.radical && <span>Radical: {full.radical}</span>}
           </div>
@@ -75,7 +80,7 @@ export function CharacterDetail({ character, onBack, onSaved }: Props) {
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm capitalize border-b-2 transition-colors ${
+            className={`px-4 py-2 text-base capitalize border-b-2 transition-colors ${
               tab === t ? 'border-cinnabar text-paper' : 'border-transparent text-paper/40'
             }`}
           >
@@ -89,16 +94,16 @@ export function CharacterDetail({ character, onBack, onSaved }: Props) {
         {tab === 'info' ? (
           <div className="px-4 py-4 space-y-3">
             <div className="card">
-              <div className="text-paper/40 text-xs uppercase tracking-wider mb-1">Definition</div>
-              <div className="text-paper text-sm leading-relaxed">{full.english ?? '—'}</div>
+              <div className="text-paper/40 text-xs uppercase tracking-wider mb-2">Definition</div>
+              <div className="text-paper text-base leading-relaxed">{full.english ?? '—'}</div>
             </div>
             {full.strokeCount && (
               <div className="card">
-                <div className="text-paper/40 text-xs uppercase tracking-wider mb-1">Stroke Order</div>
+                <div className="text-paper/40 text-xs uppercase tracking-wider mb-2">Stroke Order</div>
                 {full.strokeOrderJson ? (
-                  <div className="text-paper/60 text-sm">Stroke data available — switch to Practice tab to draw</div>
+                  <div className="text-paper/60 text-base">Stroke data available — switch to Practice tab to draw</div>
                 ) : (
-                  <div className="text-paper/40 text-sm">Stroke data not available offline</div>
+                  <div className="text-paper/40 text-base">Stroke data not available offline</div>
                 )}
               </div>
             )}
