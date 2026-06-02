@@ -15,9 +15,9 @@ interface Props {
 const PAGE_SIZE = 100
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('')
 
-// Detect tone-number pinyin like "ai2", "lao3 shi1"
-function hasToneNumbers(s: string) {
-  return /[1-5]/.test(s)
+// Trigger word search if tone numbers present OR multiple syllables (space)
+function isWordSearch(s: string) {
+  return /[1-5]/.test(s) || s.trim().includes(' ')
 }
 
 export function CharacterBrowser({ onSelect, onSelectWord, favIds, onToggleFav }: Props) {
@@ -37,7 +37,7 @@ export function CharacterBrowser({ onSelect, onSelectWord, favIds, onToggleFav }
   // Load single characters from IndexedDB
   const load = useCallback(async (py: string, en: string, p: number) => {
     // Only show character grid when not doing English search and no tone numbers
-    if (en || hasToneNumbers(py)) {
+    if (en || isWordSearch(py)) {
       setChars([])
       setTotal(0)
       return
@@ -54,7 +54,7 @@ export function CharacterBrowser({ onSelect, onSelectWord, favIds, onToggleFav }
 
   // Load word results — from IndexedDB (works offline)
   const loadWords = useCallback(async (py: string, en: string) => {
-    if (!en && !hasToneNumbers(py)) {
+    if (!en && !isWordSearch(py)) {
       setWords([])
       return
     }
@@ -88,7 +88,7 @@ export function CharacterBrowser({ onSelect, onSelectWord, favIds, onToggleFav }
   })
 
   const isSearching = pinyin !== '' || english !== ''
-  const showWords = english !== '' || hasToneNumbers(pinyin)
+  const showWords = english !== '' || isWordSearch(pinyin)
   const availableLetters = new Set(Object.keys(groups))
 
   async function jumpToLetter(letter: string) {
