@@ -4,8 +4,9 @@ import { useFavourites } from './hooks/useFavourites'
 import { CharacterBrowser } from './components/CharacterBrowser'
 import { CharacterDetail } from './components/CharacterDetail'
 import { FavouritesScreen } from './components/FavouritesScreen'
+import { WordDetail } from './components/WordDetail'
 import { ToneGuide } from './components/ToneGuide'
-import type { Character } from './services/api'
+import type { Character, Word } from './services/api'
 
 type Tab = 'browse' | 'favourites'
 
@@ -13,7 +14,8 @@ export default function App() {
   const { ready, syncing, total } = useCharacterDB()
   const { favourites, favIds, toggle } = useFavourites()
   const [tab, setTab] = useState<Tab>('browse')
-  const [selected, setSelected] = useState<Character | null>(null)
+  const [selectedChar, setSelectedChar] = useState<Character | null>(null)
+  const [selectedWord, setSelectedWord] = useState<Word | null>(null)
 
   if (!ready) {
     return (
@@ -35,14 +37,32 @@ export default function App() {
     )
   }
 
-  if (selected) {
+  // Word Detail screen
+  if (selectedWord) {
+    return (
+      <div className="flex flex-col h-full">
+        <ToneGuide />
+        <div className="flex-1 overflow-hidden">
+          <WordDetail
+            word={selectedWord}
+            isFav={favIds.has(selectedWord.id)}
+            onToggleFav={toggle}
+            onBack={() => setSelectedWord(null)}
+          />
+        </div>
+      </div>
+    )
+  }
+
+  // Character Detail screen
+  if (selectedChar) {
     return (
       <div className="flex flex-col h-full">
         <ToneGuide />
         <div className="flex-1 overflow-hidden">
           <CharacterDetail
-            character={selected}
-            onBack={() => setSelected(null)}
+            character={selectedChar}
+            onBack={() => setSelectedChar(null)}
           />
         </div>
       </div>
@@ -65,7 +85,8 @@ export default function App() {
       <main className="flex-1 overflow-hidden">
         {tab === 'browse' && (
           <CharacterBrowser
-            onSelect={setSelected}
+            onSelect={setSelectedChar}
+            onSelectWord={setSelectedWord}
             favIds={favIds}
             onToggleFav={toggle}
           />
@@ -74,6 +95,7 @@ export default function App() {
           <FavouritesScreen
             favourites={favourites}
             onToggleFav={toggle}
+            onSelectWord={setSelectedWord}
           />
         )}
       </main>
@@ -91,7 +113,7 @@ export default function App() {
               tab === item.id ? 'text-cinnabar' : 'text-paper/40'
             }`}
           >
-            <span className={`${item.id === 'favourites' ? 'text-2xl' : 'text-xl'}`}>{item.icon}</span>
+            <span className={item.id === 'favourites' ? 'text-2xl' : 'text-xl'}>{item.icon}</span>
             {item.label}
           </button>
         ))}

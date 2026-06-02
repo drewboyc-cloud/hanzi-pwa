@@ -5,9 +5,10 @@ import { PinyinDisplay } from './PinyinDisplay'
 interface Props {
   favourites: Word[]
   onToggleFav: (word: Word) => void
+  onSelectWord: (word: Word) => void
 }
 
-export function FavouritesScreen({ favourites, onToggleFav }: Props) {
+export function FavouritesScreen({ favourites, onToggleFav, onSelectWord }: Props) {
   const [search, setSearch] = useState('')
 
   const filtered = search
@@ -45,20 +46,25 @@ export function FavouritesScreen({ favourites, onToggleFav }: Props) {
       <div className="flex-1 overflow-y-auto px-4 pb-4 flex flex-col gap-2">
         {filtered.map(word => (
           <div key={word.id} className="card flex items-center gap-3 py-2.5 px-3">
-            <span className="text-4xl font-hanzi leading-none shrink-0 w-16 text-center">
-              {word.simplified}
-            </span>
-            <div className="flex-1 min-w-0">
-              <PinyinDisplay raw={word.pinyin} size="md" showNumber={true} />
-              <p className="text-paper/60 text-sm mt-0.5 leading-snug line-clamp-2">
-                {word.english}
-              </p>
-              {word.traditional && word.traditional !== word.simplified && (
-                <p className="text-paper/30 text-xs mt-0.5 font-hanzi">
-                  Traditional: {word.traditional}
+            <button
+              onClick={() => onSelectWord(word)}
+              className="flex items-center gap-3 flex-1 min-w-0 text-left active:opacity-70"
+            >
+              <span className="text-4xl font-hanzi leading-none shrink-0 w-14 text-center">
+                {word.simplified}
+              </span>
+              <div className="flex-1 min-w-0">
+                <PinyinDisplay raw={word.pinyin} size="md" showNumber={true} />
+                <p className="text-paper/60 text-sm mt-0.5 leading-snug line-clamp-2">
+                  {word.english}
                 </p>
-              )}
-            </div>
+                {word.traditional && word.traditional !== word.simplified && (
+                  <p className="text-paper/30 text-xs mt-0.5 font-hanzi">
+                    Traditional: {word.traditional}
+                  </p>
+                )}
+              </div>
+            </button>
             <button
               onClick={() => onToggleFav(word)}
               className="text-2xl text-gold shrink-0"

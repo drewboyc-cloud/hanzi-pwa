@@ -5,11 +5,12 @@ interface Props {
   words: Word[]
   favIds: Set<number>
   onToggleFav: (word: Word) => void
+  onSelectWord: (word: Word) => void
   loading?: boolean
   emptyMessage?: string
 }
 
-export function WordResults({ words, favIds, onToggleFav, loading, emptyMessage }: Props) {
+export function WordResults({ words, favIds, onToggleFav, onSelectWord, loading, emptyMessage }: Props) {
   if (loading) {
     return <div className="text-paper/40 text-sm px-1 py-3">Searching…</div>
   }
@@ -26,26 +27,27 @@ export function WordResults({ words, favIds, onToggleFav, loading, emptyMessage 
         Words ({words.length})
       </div>
       {words.map(word => (
-        <div
-          key={word.id}
-          className="flex items-center gap-3 card py-2.5 px-3"
-        >
-          {/* Hanzi */}
-          <span className="text-3xl font-hanzi leading-none shrink-0 w-16 text-center">
-            {word.simplified}
-          </span>
+        <div key={word.id} className="flex items-center gap-3 card py-2.5 px-3">
 
-          {/* Pinyin + English */}
-          <div className="flex-1 min-w-0">
-            <PinyinDisplay raw={word.pinyin} size="sm" showNumber={true} />
-            <p className="text-paper/60 text-xs mt-0.5 leading-snug line-clamp-2">
-              {word.english}
-            </p>
-          </div>
-
-          {/* Favourite star */}
+          {/* Tappable area → Word Detail */}
           <button
-            onClick={() => onToggleFav(word)}
+            onClick={() => onSelectWord(word)}
+            className="flex items-center gap-3 flex-1 min-w-0 text-left active:opacity-70"
+          >
+            <span className="text-3xl font-hanzi leading-none shrink-0 w-14 text-center">
+              {word.simplified}
+            </span>
+            <div className="flex-1 min-w-0">
+              <PinyinDisplay raw={word.pinyin} size="sm" showNumber={true} />
+              <p className="text-paper/60 text-xs mt-0.5 leading-snug line-clamp-2">
+                {word.english}
+              </p>
+            </div>
+          </button>
+
+          {/* Favourite star — separate from tap area */}
+          <button
+            onClick={e => { e.stopPropagation(); onToggleFav(word) }}
             className={`text-xl shrink-0 transition-colors ${
               favIds.has(word.id) ? 'text-gold' : 'text-paper/20 hover:text-paper/50'
             }`}

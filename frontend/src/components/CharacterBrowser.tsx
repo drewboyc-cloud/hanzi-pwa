@@ -8,6 +8,7 @@ import { WordResults } from './WordResults'
 
 interface Props {
   onSelect: (char: Character) => void
+  onSelectWord: (word: Word) => void
   favIds: Set<number>
   onToggleFav: (word: Word) => void
 }
@@ -20,7 +21,7 @@ function hasToneNumbers(s: string) {
   return /[1-5]/.test(s)
 }
 
-export function CharacterBrowser({ onSelect, favIds, onToggleFav }: Props) {
+export function CharacterBrowser({ onSelect, onSelectWord, favIds, onToggleFav }: Props) {
   const [chars, setChars] = useState<Character[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -155,6 +156,7 @@ export function CharacterBrowser({ onSelect, favIds, onToggleFav }: Props) {
               words={words}
               favIds={favIds}
               onToggleFav={onToggleFav}
+              onSelectWord={onSelectWord}
               loading={wordsLoading}
               emptyMessage="No words found — try a different spelling"
             />

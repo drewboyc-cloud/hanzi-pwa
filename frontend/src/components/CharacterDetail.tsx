@@ -4,6 +4,7 @@ import { api } from '../services/api'
 import type { Character } from '../services/api'
 import { PinyinDisplay } from './PinyinDisplay'
 import { StrokeAnimation } from './StrokeAnimation'
+import { AudioButton } from './AudioButton'
 
 interface Props {
   character: Character
@@ -55,7 +56,10 @@ export function CharacterDetail({ character, onBack }: Props) {
               Traditional: <span className="text-paper font-hanzi text-2xl ml-1">{full.traditional}</span>
             </div>
           )}
-          <PinyinDisplay raw={full.pinyin} size="lg" showNumber={true} />
+          <div className="flex items-center gap-3">
+            <PinyinDisplay raw={full.pinyin} size="lg" showNumber={true} />
+            <AudioButton text={full.char} size="sm" />
+          </div>
           <div className="text-paper/80 text-base leading-snug max-w-xs">{full.english}</div>
           <div className="flex gap-4 text-paper/40 text-sm mt-1">
             {full.strokeCount && <span>{full.strokeCount} strokes</span>}
