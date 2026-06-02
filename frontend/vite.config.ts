@@ -24,18 +24,14 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Only precache app shell — NOT the 9,575 stroke JSON files (too large for manifest)
+        // Precache app shell + the single merged stroke data file
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        maximumFileSizeToCacheInBytes: 35 * 1024 * 1024, // allow 35MB for all-strokes.json
+        additionalManifestEntries: [
+          { url: '/hanzi-pwa/hanzi-data/all-strokes.json', revision: '1' },
+        ],
         runtimeCaching: [
-          // Stroke data: cache each file on first access, keep forever offline
-          {
-            urlPattern: /\/hanzi-data\/.+\.json$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'stroke-data',
-              expiration: { maxEntries: 10000, maxAgeSeconds: 60 * 60 * 24 * 365 },
-            },
-          },
+          // all-strokes.json is precached above — no runtime rule needed
           {
             urlPattern: /\/api\/characters\/all$/,
             handler: 'CacheFirst',

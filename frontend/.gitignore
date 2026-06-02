@@ -3,3 +3,4 @@ dist/
 .env
 .env.local
 public/hanzi-data/
+!public/hanzi-data/all-strokes.json

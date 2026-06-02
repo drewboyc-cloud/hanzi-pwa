@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import HanziWriter from 'hanzi-writer'
+import { getStrokeData } from '../services/strokeData'
 
 interface Props {
   char: string
@@ -22,32 +23,26 @@ export function StrokeAnimation({ char }: Props) {
       strokeColor: '#e63946',
       radicalColor: '#f4a261',
       outlineColor: 'rgba(255,255,255,0.1)',
-      drawingColor: '#e63946',
       showCharacter: false,
       showOutline: true,
       strokeAnimationSpeed: 1,
       delayBetweenStrokes: 300,
-      // Load stroke data from our bundled local files
+      // Load from bundled all-strokes.json — works fully offline
       charDataLoader: (char, onLoad, onError) => {
-        fetch(`/hanzi-pwa/hanzi-data/${char}.json`)
-          .then(r => {
-            if (!r.ok) throw new Error('not found')
-            return r.json()
+        getStrokeData(char)
+          .then(data => {
+            if (data) onLoad(data as Parameters<typeof onLoad>[0])
+            else onError?.()
           })
-          .then(onLoad)
           .catch(() => onError?.())
       },
     })
 
     writerRef.current = writer
-
-    // Show outline first, then mark ready
     writer.hideCharacter()
-    setTimeout(() => setStatus('ready'), 800)
+    setTimeout(() => setStatus('ready'), 600)
 
-    return () => {
-      writerRef.current = null
-    }
+    return () => { writerRef.current = null }
   }, [char])
 
   function handleAnimate() {
@@ -58,13 +53,8 @@ export function StrokeAnimation({ char }: Props) {
     })
   }
 
-  function handleReplay() {
-    handleAnimate()
-  }
-
   return (
     <div className="flex flex-col items-center gap-4">
-      {/* Canvas area */}
       <div className="relative rounded-2xl border border-white/20 bg-ink overflow-hidden" style={{ width: 280, height: 280 }}>
         {status === 'loading' && (
           <div className="absolute inset-0 flex items-center justify-center text-paper/30 text-sm">
@@ -79,19 +69,10 @@ export function StrokeAnimation({ char }: Props) {
         <div ref={containerRef} />
       </div>
 
-      {/* Controls */}
       <div className="flex gap-3">
-        {status === 'ready' && (
+        {(status === 'ready' || status === 'animating') && (
           <button onClick={handleAnimate} className="btn-primary px-6">
-            ▶ Play stroke order
-          </button>
-        )}
-        {status === 'animating' && (
-          <button
-            onClick={handleReplay}
-            className="btn-ghost"
-          >
-            ↺ Replay
+            {status === 'animating' ? '↺ Replay' : '▶ Play stroke order'}
           </button>
         )}
       </div>
