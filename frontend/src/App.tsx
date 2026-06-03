@@ -16,6 +16,10 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('browse')
   const [selectedChar, setSelectedChar] = useState<Character | null>(null)
   const [selectedWord, setSelectedWord] = useState<Word | null>(null)
+  // Lifted search state so it survives navigating into/out of detail screens
+  const [browsePinyin, setBrowsePinyin] = useState('')
+  const [browseEnglish, setBrowseEnglish] = useState('')
+  const [browsePage, setBrowsePage] = useState(1)
 
   if (!ready) {
     return (
@@ -89,6 +93,12 @@ export default function App() {
             onSelectWord={setSelectedWord}
             favIds={favIds}
             onToggleFav={toggle}
+            pinyin={browsePinyin}
+            english={browseEnglish}
+            page={browsePage}
+            onPinyinChange={setBrowsePinyin}
+            onEnglishChange={setBrowseEnglish}
+            onPageChange={setBrowsePage}
           />
         )}
         {tab === 'favourites' && (

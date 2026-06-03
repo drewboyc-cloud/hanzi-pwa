@@ -10,6 +10,13 @@ interface Props {
   onSelectWord: (word: Word) => void
   favIds: Set<number>
   onToggleFav: (word: Word) => void
+  // Controlled search state lifted to App so it survives detail navigation
+  pinyin: string
+  english: string
+  page: number
+  onPinyinChange: (v: string) => void
+  onEnglishChange: (v: string) => void
+  onPageChange: (p: number) => void
 }
 
 const PAGE_SIZE = 100
@@ -20,12 +27,9 @@ function isWordSearch(s: string) {
   return /[1-5]/.test(s) || s.trim().includes(' ')
 }
 
-export function CharacterBrowser({ onSelect, onSelectWord, favIds, onToggleFav }: Props) {
+export function CharacterBrowser({ onSelect, onSelectWord, favIds, onToggleFav, pinyin, english, page, onPinyinChange, onEnglishChange, onPageChange }: Props) {
   const [chars, setChars] = useState<Character[]>([])
   const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
-  const [pinyin, setPinyin] = useState('')
-  const [english, setEnglish] = useState('')
   const [loading, setLoading] = useState(false)
   const [words, setWords] = useState<Word[]>([])
   const [wordsLoading, setWordsLoading] = useState(false)
@@ -69,15 +73,20 @@ export function CharacterBrowser({ onSelect, onSelectWord, favIds, onToggleFav }
     }
   }, [])
 
-  useEffect(() => {
-    setPage(1)
-    load(pinyin, english, 1)
-    loadWords(pinyin, english)
-  }, [pinyin, english, load, loadWords])
+  // Track previous search to detect actual changes vs. mount/page-flip
+  const prevSearch = useRef({ pinyin, english })
 
   useEffect(() => {
-    load(pinyin, english, page)
-  }, [page, pinyin, english, load])
+    const searchChanged =
+      prevSearch.current.pinyin !== pinyin || prevSearch.current.english !== english
+    prevSearch.current = { pinyin, english }
+
+    const targetPage = searchChanged ? 1 : page
+    if (searchChanged) onPageChange(1)
+
+    load(pinyin, english, targetPage)
+    loadWords(pinyin, english)
+  }, [pinyin, english, page, load, loadWords])
 
   const pages = Math.ceil(total / PAGE_SIZE)
 
@@ -99,7 +108,7 @@ export function CharacterBrowser({ onSelect, onSelectWord, favIds, onToggleFav }
       return
     }
     const targetPage = await idb.getPageForLetter(letter, PAGE_SIZE)
-    setPage(targetPage)
+    onPageChange(targetPage)
     setPendingScrollLetter(letter)
   }
 
@@ -134,8 +143,8 @@ export function CharacterBrowser({ onSelect, onSelectWord, favIds, onToggleFav }
           <SearchBar
             pinyin={pinyin}
             english={english}
-            onPinyinChange={v => { setPinyin(v); setEnglish('') }}
-            onEnglishChange={v => { setEnglish(v); setPinyin('') }}
+            onPinyinChange={v => { onPinyinChange(v); onEnglishChange('') }}
+            onEnglishChange={v => { onEnglishChange(v); onPinyinChange('') }}
           />
           {!isSearching && (
             <p className="text-paper/30 text-xs mt-1 ml-1">{total.toLocaleString()} characters</p>
@@ -195,9 +204,9 @@ export function CharacterBrowser({ onSelect, onSelectWord, favIds, onToggleFav }
 
         {!showWords && pages > 1 && (
           <div className="flex items-center justify-center gap-3 px-4 py-3 border-t border-white/10">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="btn-ghost disabled:opacity-30">←</button>
+            <button onClick={() => onPageChange(Math.max(1, page - 1))} disabled={page === 1} className="btn-ghost disabled:opacity-30">←</button>
             <span className="text-paper/60 text-sm">{page} / {pages}</span>
-            <button onClick={() => setPage(p => Math.min(pages, p + 1))} disabled={page === pages} className="btn-ghost disabled:opacity-30">→</button>
+            <button onClick={() => onPageChange(Math.min(pages, page + 1))} disabled={page === pages} className="btn-ghost disabled:opacity-30">→</button>
           </div>
         )}
       </div>
